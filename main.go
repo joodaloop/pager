@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -23,6 +24,7 @@ import (
 	"unicode"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/yuin/goldmark"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 	"gopkg.in/yaml.v3"
@@ -98,17 +100,6 @@ func textContent(n *html.Node) string {
 	return sb.String()
 }
 
-func containsAnchor(n *html.Node) bool {
-	if n.Type == html.ElementNode && n.Data == "a" {
-		return true
-	}
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		if containsAnchor(c) {
-			return true
-		}
-	}
-	return false
-}
 
 func hasAttr(n *html.Node, key string) bool {
 	for _, a := range n.Attr {
@@ -117,6 +108,16 @@ func hasAttr(n *html.Node, key string) bool {
 		}
 	}
 	return false
+}
+
+func setAttr(n *html.Node, key, val string) {
+	for i, a := range n.Attr {
+		if a.Key == key {
+			n.Attr[i].Val = val
+			return
+		}
+	}
+	n.Attr = append(n.Attr, html.Attribute{Key: key, Val: val})
 }
 
 func getAttr(n *html.Node, key string) string {
@@ -135,34 +136,36 @@ type processState struct {
 	links    []string
 }
 
+func (s *processState) uniqueID(id string) string {
+	if !s.ids[id] {
+		s.ids[id] = true
+		return id
+	}
+	for i := 1; ; i++ {
+		candidate := fmt.Sprintf("%s-%d", id, i)
+		if !s.ids[candidate] {
+			s.ids[candidate] = true
+			return candidate
+		}
+	}
+}
+
 func processNode(n *html.Node, s *processState) {
 	if n.Type == html.ElementNode {
-		// Auto-ID headings and wrap in anchor link
+		// Auto-ID headings based on text content
 		if len(n.Data) == 2 && n.Data[0] == 'h' && n.Data[1] >= '1' && n.Data[1] <= '6' {
 			text := textContent(n)
 			level := int(n.Data[1] - '0')
-			if !hasAttr(n, "id") && !containsAnchor(n) {
+			if !hasAttr(n, "id") {
 				slug := slugify(text)
 				if slug != "" {
+					slug = s.uniqueID(slug)
 					n.Attr = append(n.Attr, html.Attribute{Key: "id", Val: slug})
 					s.headings = append(s.headings, heading{Level: level, ID: slug, Text: strings.TrimSpace(text)})
-					s.ids[slug] = true
-					a := &html.Node{
-						Type:     html.ElementNode,
-						Data:     "a",
-						DataAtom: atom.A,
-						Attr:     []html.Attribute{{Key: "href", Val: "#" + slug}},
-					}
-					for n.FirstChild != nil {
-						child := n.FirstChild
-						n.RemoveChild(child)
-						a.AppendChild(child)
-					}
-					n.AppendChild(a)
 				}
-			} else if hasAttr(n, "id") {
-				id := getAttr(n, "id")
-				s.ids[id] = true
+			} else {
+				id := s.uniqueID(getAttr(n, "id"))
+				setAttr(n, "id", id)
 				s.headings = append(s.headings, heading{Level: level, ID: id, Text: strings.TrimSpace(text)})
 			}
 		}
@@ -170,7 +173,8 @@ func processNode(n *html.Node, s *processState) {
 		// Collect IDs from any element
 		if n.Data != "h1" && n.Data != "h2" && n.Data != "h3" && n.Data != "h4" && n.Data != "h5" && n.Data != "h6" {
 			if hasAttr(n, "id") {
-				s.ids[getAttr(n, "id")] = true
+				id := s.uniqueID(getAttr(n, "id"))
+				setAttr(n, "id", id)
 			}
 		}
 
@@ -203,6 +207,21 @@ func processNode(n *html.Node, s *processState) {
 			}
 		}
 
+		// Warn on empty or missing-file src/poster attributes
+		for _, attr := range []string{"src", "poster"} {
+			if hasAttr(n, attr) {
+				val := getAttr(n, attr)
+				if val == "" {
+					warn("<%s> has empty %s attribute", n.Data, attr)
+				} else if !strings.HasPrefix(val, "http") && !strings.HasPrefix(val, "data:") && !strings.HasPrefix(val, "//") {
+					path := filepath.Join(s.dir, val)
+					if _, err := os.Stat(path); err != nil {
+						warn("<%s %s=%q> references missing file", n.Data, attr, val)
+					}
+				}
+			}
+		}
+
 		// External links: add target="_blank" and rel="noopener"
 		// Local links: collect for validation
 		if n.Data == "a" {
@@ -214,7 +233,9 @@ func processNode(n *html.Node, s *processState) {
 				if !hasAttr(n, "rel") {
 					n.Attr = append(n.Attr, html.Attribute{Key: "rel", Val: "noopener"})
 				}
-			} else if href != "" {
+			} else if href == "" {
+				warn("<a> has empty href attribute")
+			} else {
 				s.links = append(s.links, href)
 			}
 			// Warn on icon-only links missing aria-label
@@ -244,14 +265,40 @@ func buildTOC(headings []heading) string {
 }
 
 func processContent(content string, dir string) string {
+	// Expand <md src="..."> tags by reading and converting markdown files
+	mdRe := regexp.MustCompile(`<md\s+src="([^"]*)"\s*/?>(?:</md>)?`)
+	content = mdRe.ReplaceAllStringFunc(content, func(match string) string {
+		m := mdRe.FindStringSubmatch(match)
+		src := m[1]
+		if src == "" {
+			warn("<md> has empty src attribute")
+			return ""
+		}
+		if !strings.HasSuffix(src, ".md") {
+			warn("<md src=%q> is not a markdown file", src)
+			return ""
+		}
+		mdPath := filepath.Join(dir, src)
+		data, err := os.ReadFile(mdPath)
+		if err != nil {
+			warn("<md src=%q> references missing file", src)
+			return ""
+		}
+		var buf bytes.Buffer
+		if err := goldmark.Convert(data, &buf); err != nil {
+			warn("<md src=%q> failed to convert: %v", src, err)
+			return ""
+		}
+		return buf.String()
+	})
+
 	// Replace <toc /> and <toc></toc> with a placeholder before parsing
 	hasTOC := false
 	const tocPlaceholder = "<!--TOC_PLACEHOLDER-->"
-	for _, tag := range []string{"<toc />", "<toc/>", "<toc></toc>"} {
-		if strings.Contains(content, tag) {
-			content = strings.ReplaceAll(content, tag, tocPlaceholder)
-			hasTOC = true
-		}
+	tocRe := regexp.MustCompile(`<toc\s*/>|<toc>\s*</toc>`)
+	if tocRe.MatchString(content) {
+		content = tocRe.ReplaceAllString(content, tocPlaceholder)
+		hasTOC = true
 	}
 
 	context := &html.Node{

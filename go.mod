@@ -1,4 +1,4 @@
-module site
+module pager
 
 go 1.24.5
 
@@ -8,4 +8,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require golang.org/x/sys v0.41.0 // indirect
+require (
+	github.com/yuin/goldmark v1.7.16 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+)

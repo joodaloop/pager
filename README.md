@@ -1,16 +1,16 @@
-# site
+# pager
 
 A single-page site builder with live reload, auto-linked headings, image aspect ratios, and accessibility warnings.
 
 ## Install
 
 ```sh
-git clone https://github.com/youruser/site.git
-cd site
+git clone https://github.com/youruser/pager.git
+cd pager
 go install
 ```
 
-This places the `site` binary in `~/go/bin`. Make sure it's in your PATH:
+This places the `pager` binary in `~/go/bin`. Make sure it's in your PATH:
 
 ```sh
 # add to your ~/.zshrc or ~/.bashrc if not already there
@@ -22,14 +22,14 @@ export PATH=$PATH:$HOME/go/bin
 **Create a new site:**
 
 ```sh
-site new mysite
+pager new mysite
 cd mysite
 ```
 
 **Run the dev server:**
 
 ```sh
-site
+pager
 ```
 
 This builds `index.html`, starts a server at `http://localhost:8080`, opens your browser, and live-reloads on any file change.
@@ -37,13 +37,13 @@ This builds `index.html`, starts a server at `http://localhost:8080`, opens your
 Use `-p` for a different port:
 
 ```sh
-site -p 3000
+pager -p 3000
 ```
 
 **Production build:**
 
 ```sh
-site build
+pager build
 ```
 
 Builds `index.html` with asset hashing (e.g. `style.abc123.css`) for cache busting.
@@ -77,17 +77,19 @@ Add `<toc />` anywhere in `content.html` to render a list of links to all headin
 <nav>
   <toc />
 </nav>
-<h2>First section</h2>
-<h2>Second section</h2>
 ```
 
 ## What it does
 
 - Builds `index.html` from `site.yaml` + `content.html` + a built-in HTML template
-- **Headings** without an `id` or `<a>` get auto-linked: `<h2>My Section</h2>` → `<h2 id="my-section"><a href="#my-section">My Section</a></h2>`
+- **Headings** without an `id` get an auto-generated `id` based on their text content: `<h2>My Section</h2>` → `<h2 id="my-section">My Section</h2>`
 - **`<toc />`** renders an unordered list of links to all headings on the page
 - **Images** with local `src` get `aspect-ratio` from actual file dimensions
 - **External links** get `target="_blank"` and `rel="noopener"`
 - **Local link checking** — warns on `<a href="#missing-id">` and `<a href="missing-file.pdf">`
-- **Asset hashing** — `site build` copies CSS files with content hashes for cache busting
+- **Asset hashing** — `pager build` copies CSS files with content hashes for cache busting
 - **Warnings** for missing alt text, icon-only links without `aria-label`, missing frontmatter fields, missing referenced files, title > 60 chars, description > 160 chars
+
+## future
+- <csv src="/data.csv"> → table
+- <include src="/snippet.html">
