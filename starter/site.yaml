@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=
+title: My Site
+description: A new site
+favicon: ""
+card: ""
+base_url: example.com
+css: []

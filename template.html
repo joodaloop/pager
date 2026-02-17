@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{{ .Title }}</title>
+    <meta name="description" content="{{ .Description }}">
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ .Favicon }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ .Favicon }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ .Favicon }}">
+
+    <meta property="og:url" content="{{ .Site.BaseURL }}" />
+    <meta property="og:title" content="{{ .Title }}" />
+    <meta property="og:description" content="{{ .Description }}" />
+    <meta property="og:image" content="{{ .Site.BaseURL }}{{ .Card }}" />
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ .Title }}">
+    <meta name="twitter:description" content="{{ .Description }}" />
+    <meta name="twitter:image" content="{{ .Site.BaseURL }}{{ .Card }}" />
+
+    {{- range .CSS }}
+    <link rel="stylesheet" type="text/css" href="{{ . }}" />
+    {{- end }}
+    {{- range .InlineStyles }}
+    <style>{{ . }}</style>
+    {{- end }}
+    {{ .Inject }}
+  </head>
+  <body>
+    {{ .Content }}
+  </body>
+</html>
