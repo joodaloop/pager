@@ -59,12 +59,16 @@ func build(dir string) error {
 	}
 
 	// Warn on missing referenced files
-	if cfg.Favicon != "" && !strings.HasPrefix(cfg.Favicon, "http") {
+	if cfg.Favicon == "" {
+		warn("missing 'favicon' in pager.yaml")
+	} else if !strings.HasPrefix(cfg.Favicon, "http") {
 		if _, err := os.Stat(filepath.Join(dir, cfg.Favicon)); err != nil {
 			warn("favicon file not found: %s", cfg.Favicon)
 		}
 	}
-	if cfg.Card != "" && !strings.HasPrefix(cfg.Card, "http") {
+	if cfg.Card == "" {
+		warn("missing 'card' in pager.yaml")
+	} else if !strings.HasPrefix(cfg.Card, "http") {
 		if _, err := os.Stat(filepath.Join(dir, cfg.Card)); err != nil {
 			warn("card image not found: %s", cfg.Card)
 		}

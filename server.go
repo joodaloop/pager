@@ -125,7 +125,7 @@ func run(dir string, port int) error {
 				if timer != nil {
 					timer.Stop()
 				}
-				timer = time.AfterFunc(100*time.Millisecond, func() {
+				timer = time.AfterFunc(300*time.Millisecond, func() {
 					if err := build(dir); err != nil {
 						log.Printf("Build error: %v", err)
 					} else {

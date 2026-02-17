@@ -3,7 +3,7 @@ title: Pager
 description: A very interesting page
 favicon: ""
 card: ""
-domain: example.com
+domain: pager.joodaloop.com
 port: 9463
 css:
   - "css/reset.css"

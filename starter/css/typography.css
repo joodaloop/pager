@@ -1,6 +1,6 @@
 :root {
-  --base-font-size: 16px;
-  --spacing: calc(1.1 * var(--base-font-size));
+  --font-size: 16px;
+  --spacing: calc(1.1 * var(--font-size));
   --font-body: system-ui;
   --font-headings: Manrope;
 }
@@ -11,7 +11,7 @@
 }
 
 body {
-  font-size: var(--base-font-size);
+  font-size: var(--font-size);
   font-family: var(--font-body);
   line-height: 1.6em;
 }
