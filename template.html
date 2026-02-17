@@ -11,15 +11,15 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ .Favicon }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ .Favicon }}">
 
-    <meta property="og:url" content="{{ .Site.BaseURL }}" />
+    <meta property="og:url" content="{{ .Site.Domain }}" />
     <meta property="og:title" content="{{ .Title }}" />
     <meta property="og:description" content="{{ .Description }}" />
-    <meta property="og:image" content="{{ .Site.BaseURL }}{{ .Card }}" />
+    <meta property="og:image" content="{{ .Site.Domain }}{{ .Card }}" />
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ .Title }}">
     <meta name="twitter:description" content="{{ .Description }}" />
-    <meta name="twitter:image" content="{{ .Site.BaseURL }}{{ .Card }}" />
+    <meta name="twitter:image" content="{{ .Site.Domain }}{{ .Card }}" />
 
     {{- range .CSS }}
     <link rel="stylesheet" type="text/css" href="{{ . }}" />

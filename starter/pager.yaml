@@ -3,5 +3,6 @@ title: My Site
 description: A new site
 favicon: ""
 card: ""
-base_url: example.com
+domain: example.com
+port: 8080
 css: []
