@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"net/url"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -172,6 +173,11 @@ func processNode(n *html.Node, s *processState) {
 		if n.Data == "a" {
 			href := getAttr(n, "href")
 			if strings.HasPrefix(href, "http://") || strings.HasPrefix(href, "https://") {
+				if u, err := url.Parse(href); err != nil {
+					warn("<a href=%q> is not a valid URL", href)
+				} else if strings.Contains(u.Host, "localhost") || strings.Contains(u.Host, "127.0.0.1") {
+					warn("<a href=%q> links to localhost", href)
+				}
 				if !hasAttr(n, "target") {
 					n.Attr = append(n.Attr, html.Attribute{Key: "target", Val: "_blank"})
 				}

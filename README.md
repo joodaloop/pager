@@ -1,6 +1,65 @@
-# pager
+# Pager ([pager.joodaloop.com](https:pager.joodaloop.com))
 
 A single-page site builder with live reload, auto-linked headings, image aspect ratios, markdown support, and accessibility warnings.
+
+You set up your site details in `pager.yaml` like so:
+```yaml
+title: My Site
+description: A cool site
+favicon: favicon.png
+card: card.png
+domain: example.com
+port: 8080
+css:
+  - style.css
+inject: '<!-- anything you want to add to the <head> of the page -->'
+```
+
+And write your content in `pager.html`, no need for `<body>` or `<head>` tags, start directly with the content. I use `<main>` as content root myself. Add your stylesheets, assets and other resources however you like as long as you link to them correctly. But don't worry, if you have any broken links, the server will warn you.
+
+Speaking of which, you can start the server by entering the site's root and running `pager`. This builds `index.html` and `index.md`, starts a server that live-reloads on any file change. 
+
+#### **NOTE:** UNLIKE WHAT YOU MIGHT EXPECT, THE HTML AND MARKDOWN `index` FILES ARE NOT MEANT TO BE EDITED BY YOU. THEY ARE GENERATED FROM THE `pager.html` AND `pager.yaml` FILES
+
+
+## Additional features
+
+Apart from giving you good HTML skeleton from your config details, Pager also comes with:
+
+### <convert> snippets
+
+Convert markdown or CSV files to HTML with the `<convert>` tag:
+
+```html
+<convert src="about.md" />
+<convert src="data.csv" />
+```
+
+- `.md` — converted to HTML via goldmark
+- `.csv` — rendered as an HTML `<table>` (first row becomes `<thead>`)
+
+### Syntax highlighting
+
+Embed any file as a syntax-highlighted code block with the `<syntax>` tag, with the language auto- detected from the file extension using [chroma](https://github.com/alecthomas/chroma).
+
+```html
+<syntax src="example.py" />
+<syntax src="config.yaml" />
+```
+
+### Table of contents
+
+Add `<toc />` anywhere in `content.html` to render a list of links to all headings.
+
+### Misc. 
+- **Markdown page for LLMs to read/humans to copy** — generates `index.md` with YAML frontmatter as a render-equivalent of the HTML page.
+- **Headings** without an `id` get an auto-generated `id` based on their text content: `<h2>My Section</h2>` → `<h2 id="my-section">My Section</h2>`
+- **Images** with local `src` get `aspect-ratio` from actual file dimensions
+- **External links** get `target="_blank"` and `rel="noopener"`
+- **Local link checking** — warns on `<a href="#missing-id">` and `<a href="missing-file.pdf">`
+- **Asset hashing** — links to CSS files using content hashes query strings for cache busting.
+- **Warnings** for missing alt text, icon-only links without `aria-label`, missing frontmatter fields, missing referenced files, title > 60 chars, description > 160 chars
+
 
 ## Install
 
@@ -17,22 +76,25 @@ This places the `pager` binary in `~/go/bin`. Make sure it's in your PATH:
 export PATH=$PATH:$HOME/go/bin
 ```
 
+
 ## Usage
 
-**Create a new site:**
+We have a small set of CLI commands, and all you really need in practice is the `pager` command.
+
+### Create a new site:
 
 ```sh
 pager new mysite
 cd mysite
 ```
 
-**Run the dev server:**
+### Run the dev server:
 
 ```sh
 pager
 ```
 
-This builds `index.html` and `index.md`, starts a server at `http://localhost:8080`, opens your browser, and live-reloads on any file change.
+This builds `index.html` and `index.md`, starts a server that live-reloads on any file change.
 
 Use `-p` for a different port:
 
@@ -40,95 +102,11 @@ Use `-p` for a different port:
 pager -p 3000
 ```
 
-**Production build:**
+
+### Plain build:
 
 ```sh
 pager build
 ```
 
-Builds `index.html` and `index.md` with asset hashing (e.g. `style.abc123.css`) for cache busting.
-
-## Configuration
-
-Edit `pager.yaml`:
-
-```yaml
-title: My Site
-description: A cool site
-favicon: favicon.png
-card: card.png
-domain: example.com
-port: 8080
-css:
-  - style.css
-inline_css: true
-inject: '<link rel="preconnect" href="https://fonts.googleapis.com">'
-```
-
-- `domain` doesn't need `https://` — it's added automatically.
-- `port` sets the dev server port (default `8080`). Can be overridden with `pager -p 3000`.
-- `inject` inserts raw HTML into `<head>`.
-- `css` lists your stylesheets — linked via `<link>` tags by default.
-- `inline_css: true` embeds the contents of local CSS files in `<style>` tags instead of linking them.
-
-## Convert
-
-Convert markdown or CSV files to HTML with the `<convert>` tag:
-
-```html
-<convert src="about.md" />
-<convert src="data.csv" />
-```
-
-- `.md` — converted to HTML via goldmark
-- `.csv` — rendered as an HTML `<table>` (first row becomes `<thead>`)
-
-## Syntax highlighting
-
-Embed any file as a syntax-highlighted code block with the `<syntax>` tag:
-
-```html
-<syntax src="example.py" />
-<syntax src="config.yaml" />
-```
-
-Language is detected from the file extension via [chroma](https://github.com/alecthomas/chroma).
-
-## Markdown output
-
-Every build generates `index.md` alongside `index.html` — a markdown equivalent of the page content, available at `/index.md` on your domain. It includes YAML frontmatter with the site's title, description, and domain:
-
-```markdown
----
-title: "My Site"
-description: "A cool site"
-domain: "example.com"
----
-
-# Hello, world
-...
-```
-
-## Table of contents
-
-Add `<toc />` anywhere in `content.html` to render a list of links to all headings:
-
-```html
-<nav>
-  <toc />
-</nav>
-```
-
-## What it does
-
-- Builds `index.html` and `index.md` from `pager.yaml` + `content.html` + a built-in HTML template
-- **Convert** — `<convert src="file.md" />` inlines converted markdown, `<convert src="data.csv" />` renders a table
-- **Syntax highlighting** — `<syntax src="example.py" />` embeds a syntax-highlighted code block
-- **Markdown output** — generates `index.md` with YAML frontmatter as a render-equivalent of the HTML page
-- **Headings** without an `id` get an auto-generated `id` based on their text content: `<h2>My Section</h2>` → `<h2 id="my-section">My Section</h2>`
-- **`<toc />`** renders an unordered list of links to all headings on the page
-- **Images** with local `src` get `aspect-ratio` from actual file dimensions
-- **External links** get `target="_blank"` and `rel="noopener"`
-- **Local link checking** — warns on `<a href="#missing-id">` and `<a href="missing-file.pdf">`
-- **Asset hashing** — `pager build` copies CSS files with content hashes for cache busting
-- **Warnings** for missing alt text, icon-only links without `aria-label`, missing frontmatter fields, missing referenced files, title > 60 chars, description > 160 chars
+Builds `index.html` and `index.md` without starting the server.

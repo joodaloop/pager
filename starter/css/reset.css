@@ -12,35 +12,13 @@ html {
 
 body {
   margin: 0;
+  min-height: 100vh;
 }
 
 /* Remove list styles on ul, ol elements with a list role, which suggests default styling will be removed */
 ul[role="list"],
 ol[role="list"] {
   list-style: none;
-}
-
-/* Set core body defaults */
-body {
-  min-height: 100vh;
-  line-height: 1.5;
-}
-
-/* Set shorter line heights on headings and interactive elements */
-h1,
-h2,
-h3,
-h4,
-button,
-input,
-label {
-  line-height: 1.1;
-}
-
-/* A elements that don't have a class get default styles */
-a:not([class]) {
-  text-decoration-skip-ink: auto;
-  color: currentColor;
 }
 
 /* Make images easier to work with */
@@ -60,6 +38,7 @@ textarea,
 select {
   font-family: inherit;
   font-size: inherit;
+  line-height: 1.2em;
 }
 
 /* Make sure textareas without a rows attribute are not tiny */
@@ -67,7 +46,16 @@ textarea:not([rows]) {
   min-height: 10em;
 }
 
-/* Anything that has been anchored to should have extra scroll margin */
 :target {
   scroll-margin-block: 5ex;
+}
+
+::selection {
+  background: #cccccc;
+}
+
+button,
+select,
+label {
+  user-select: none;
 }

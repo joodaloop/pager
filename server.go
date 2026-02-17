@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -145,8 +146,14 @@ func run(dir string, port int) error {
 	mux.HandleFunc("/_reload", sseHandler)
 	mux.Handle("/", fileServer(dir))
 
-	addr := fmt.Sprintf(":%d", port)
-	url := fmt.Sprintf("http://localhost%s", addr)
-	log.Printf("Serving at %s", url)
-	return http.ListenAndServe(addr, mux)
+	for {
+		addr := fmt.Sprintf(":%d", port)
+		ln, err := net.Listen("tcp", addr)
+		if err != nil {
+			port++
+			continue
+		}
+		log.Printf("Serving at http://localhost:%d", port)
+		return http.Serve(ln, mux)
+	}
 }

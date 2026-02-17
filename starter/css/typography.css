@@ -2,23 +2,12 @@
   --base-font-size: 16px;
   --spacing: calc(1.1 * var(--base-font-size));
   --font-body: system-ui;
-  --font-headings: serif;
+  --font-headings: Manrope;
 }
 
 @font-face {
-  font-family: "Heebo";
-  src: url("/fonts/Heebo.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Bitter";
-  src: url("/fonts/Bitter.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Bitter";
-  src: url("/fonts/Bitter-Italic.woff2") format("woff2");
-  font-style: italic;
+  font-family: "Manrope";
+  src: url("/assets/Manrope.woff2") format("woff2");
 }
 
 body {
@@ -27,52 +16,45 @@ body {
   line-height: 1.6em;
 }
 
-a:hover {
-  text-decoration: underline;
-  text-decoration-color: var(--theme);
-  color: var(--theme);
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+  color: currentColor;
 }
 
-article a {
-  text-decoration: underline;
-  color: var(--color);
-  text-decoration-color: var(--theme);
-}
-
-input,
-button,
-textarea,
-select {
-  font: inherit;
-}
-
-p,
 h1,
 h2,
 h3,
 h4,
 h5,
-h6,
-blockquote,
-pre {
+h6 {
   overflow-wrap: break-word;
-  margin: 1em 0em var(--spacing) 0em;
+  margin: 1.2em 0em var(--spacing) 0em;
+}
+
+p,
+blockquote,
+details,
+pre,
+ul,
+ol {
+  margin: 0em 0em var(--spacing) 0em;
 }
 
 p:last-child,
 blockquote:last-child,
+details:last-child pre:last-child,
 ul:last-child,
-ol:last-child,
-pre:last-child {
+ol:last-child {
   margin-bottom: 0px;
 }
 
 h1 {
   font-size: 2.625em;
-  line-height: 1.2em;
+  line-height: 1.1em;
   font-family: var(--font-headings);
-  color: var(--theme);
   text-wrap: pretty;
+  font-weight: 800;
+  margin: 0em 0em var(--spacing) 0em;
 }
 
 h2 {
@@ -94,21 +76,14 @@ h5 {
   font-size: 0.8125em;
 }
 
-a {
-  color: var(--theme);
-  text-decoration: none;
-  text-underline-offset: 3px;
-}
-
 ol,
 ul {
   padding-left: 1.2em;
-  margin-bottom: var(--spacing);
 }
 
 ol li,
 ul li {
-  margin: 0.5em 0em;
+  margin: calc(var(--spacing) * 0.25) 0em;
 }
 
 blockquote {
@@ -117,6 +92,28 @@ blockquote {
   border-radius: 8px;
 }
 
+code {
+  font-size: 0.9em;
+  padding: 0.2em 0.3em;
+  background: #eeeeee;
+}
+
+pre {
+  background: #eeeeee;
+  padding: 16px;
+  border: solid 1px black;
+  text-wrap: wrap;
+}
+
+pre code {
+  background: none;
+  padding: 0em;
+}
+
 cite {
   display: block;
+}
+
+hr {
+  margin: calc(var(--spacing) * 1.5) 0;
 }
