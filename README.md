@@ -71,23 +71,28 @@ inject: '<link rel="preconnect" href="https://fonts.googleapis.com">'
 - `css` lists your stylesheets — linked via `<link>` tags by default.
 - `inline_css: true` embeds the contents of local CSS files in `<style>` tags instead of linking them.
 
-## Includes
+## Convert
 
-Include files in `content.html` with the `<include>` tag:
+Convert markdown or CSV files to HTML with the `<convert>` tag:
 
 ```html
-<include src="about.md" />
-<include src="snippet.html" />
-<include src="data.csv" />
-<include src="example.py" />
+<convert src="about.md" />
+<convert src="data.csv" />
 ```
 
-The behavior depends on the file extension:
-
-- `.html` — inserted as raw HTML
 - `.md` — converted to HTML via goldmark
 - `.csv` — rendered as an HTML `<table>` (first row becomes `<thead>`)
-- Anything else — syntax-highlighted code block via [chroma](https://github.com/alecthomas/chroma) (language detected from extension)
+
+## Syntax highlighting
+
+Embed any file as a syntax-highlighted code block with the `<syntax>` tag:
+
+```html
+<syntax src="example.py" />
+<syntax src="config.yaml" />
+```
+
+Language is detected from the file extension via [chroma](https://github.com/alecthomas/chroma).
 
 ## Markdown output
 
@@ -117,7 +122,8 @@ Add `<toc />` anywhere in `content.html` to render a list of links to all headin
 ## What it does
 
 - Builds `index.html` and `index.md` from `pager.yaml` + `content.html` + a built-in HTML template
-- **Markdown includes** — `<md src="file.md" />` inlines converted markdown
+- **Convert** — `<convert src="file.md" />` inlines converted markdown, `<convert src="data.csv" />` renders a table
+- **Syntax highlighting** — `<syntax src="example.py" />` embeds a syntax-highlighted code block
 - **Markdown output** — generates `index.md` with YAML frontmatter as a render-equivalent of the HTML page
 - **Headings** without an `id` get an auto-generated `id` based on their text content: `<h2>My Section</h2>` → `<h2 id="my-section">My Section</h2>`
 - **`<toc />`** renders an unordered list of links to all headings on the page

@@ -210,37 +210,54 @@ func buildTOC(headings []heading) string {
 }
 
 func processContent(content string, dir string) string {
-	// Expand <include src="..."> tags based on file extension
-	includeRe := regexp.MustCompile(`<include\s+src="([^"]*)"\s*/?>(?:</include>)?`)
-	content = includeRe.ReplaceAllStringFunc(content, func(match string) string {
-		m := includeRe.FindStringSubmatch(match)
+	// Expand <convert src="..."> tags: .md → HTML, .csv → table
+	convertRe := regexp.MustCompile(`<convert\s+src="([^"]*)"\s*/?>(?:</convert>)?`)
+	content = convertRe.ReplaceAllStringFunc(content, func(match string) string {
+		m := convertRe.FindStringSubmatch(match)
 		src := m[1]
 		if src == "" {
-			warn("<include> has empty src attribute")
+			warn("<convert> has empty src attribute")
 			return ""
 		}
 		filePath := filepath.Join(dir, src)
 		data, err := os.ReadFile(filePath)
 		if err != nil {
-			warn("<include src=%q> references missing file", src)
+			warn("<convert src=%q> references missing file", src)
 			return ""
 		}
 		ext := strings.ToLower(filepath.Ext(src))
 		switch ext {
-		case ".html":
-			return string(data)
 		case ".md":
 			var buf bytes.Buffer
 			if err := goldmark.Convert(data, &buf); err != nil {
-				warn("<include src=%q> failed to convert markdown: %v", src, err)
+				warn("<convert src=%q> failed to convert markdown: %v", src, err)
 				return ""
 			}
 			return buf.String()
 		case ".csv":
 			return csvToTable(data, src)
 		default:
-			return highlightCode(data, src)
+			warn("<convert src=%q> unsupported extension %q (use .md or .csv)", src, ext)
+			return ""
 		}
+	})
+
+	// Expand <syntax src="..."> tags: syntax-highlighted code block
+	syntaxRe := regexp.MustCompile(`<syntax\s+src="([^"]*)"\s*/?>(?:</syntax>)?`)
+	content = syntaxRe.ReplaceAllStringFunc(content, func(match string) string {
+		m := syntaxRe.FindStringSubmatch(match)
+		src := m[1]
+		if src == "" {
+			warn("<syntax> has empty src attribute")
+			return ""
+		}
+		filePath := filepath.Join(dir, src)
+		data, err := os.ReadFile(filePath)
+		if err != nil {
+			warn("<syntax src=%q> references missing file", src)
+			return ""
+		}
+		return highlightCode(data, src)
 	})
 
 	// Replace <toc /> and <toc></toc> with a placeholder before parsing
