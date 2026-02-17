@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -127,12 +128,28 @@ func build(dir string) error {
 	}
 
 	// Syntax theme: inline chroma CSS if theme is set
+	// Supports "light" or "light/dark" format (e.g. "github" or "github/monokai")
 	if cfg.Theme != "" {
-		css := syntaxThemeCSS(cfg.Theme)
-		if css == "" {
-			warn("unknown syntax theme: %s", cfg.Theme)
+		if parts := strings.SplitN(cfg.Theme, "/", 2); len(parts) == 2 {
+			lightCSS := syntaxThemeCSS(parts[0])
+			if lightCSS == "" {
+				warn("unknown light syntax theme: %s", parts[0])
+			} else {
+				inlineStyles = append(inlineStyles, template.CSS(lightCSS))
+			}
+			darkCSS := syntaxThemeDarkCSS(parts[1])
+			if darkCSS == "" {
+				warn("unknown dark syntax theme: %s", parts[1])
+			} else {
+				inlineStyles = append(inlineStyles, template.CSS(darkCSS))
+			}
 		} else {
-			inlineStyles = append(inlineStyles, template.CSS(css))
+			css := syntaxThemeCSS(cfg.Theme)
+			if css == "" {
+				warn("unknown syntax theme: %s", cfg.Theme)
+			} else {
+				inlineStyles = append(inlineStyles, template.CSS(css))
+			}
 		}
 	}
 
@@ -178,6 +195,31 @@ func build(dir string) error {
 	}
 
 	return nil
+}
+
+func deploy(dir string) error {
+	if err := build(dir); err != nil {
+		return err
+	}
+	log.Printf("Built index.html")
+
+	raw, err := os.ReadFile(filepath.Join(dir, "pager.yaml"))
+	if err != nil {
+		return fmt.Errorf("pager.yaml: %w", err)
+	}
+	var cfg Config
+	if err := yaml.Unmarshal(raw, &cfg); err != nil {
+		return fmt.Errorf("pager.yaml: %w", err)
+	}
+	if cfg.Deploy == "" {
+		return fmt.Errorf("no 'deploy' command defined in pager.yaml")
+	}
+
+	log.Printf("Running: %s", cfg.Deploy)
+	cmd := exec.Command("sh", "-c", cfg.Deploy)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func scaffold(name string) error {

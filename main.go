@@ -34,6 +34,7 @@ type Config struct {
 	InlineCSS   bool     `yaml:"inline_css"`
 	Inject      string   `yaml:"inject"`
 	Theme       string   `yaml:"theme"`
+	Deploy      string   `yaml:"deploy"`
 }
 
 type heading struct {
@@ -67,6 +68,13 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Printf("Built index.html")
+		return
+	}
+
+	if len(os.Args) >= 2 && os.Args[1] == "deploy" {
+		if err := deploy("."); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 

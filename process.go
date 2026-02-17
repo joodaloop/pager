@@ -201,9 +201,54 @@ func buildTOC(headings []heading) string {
 		return ""
 	}
 	var sb strings.Builder
-	sb.WriteString("<ul>\n")
-	for _, h := range headings {
-		sb.WriteString(fmt.Sprintf("  <li><a href=\"#%s\">%s</a></li>\n", h.ID, h.Text))
+	// Find the minimum level to use as base depth
+	minLevel := headings[0].Level
+	for _, h := range headings[1:] {
+		if h.Level < minLevel {
+			minLevel = h.Level
+		}
+	}
+	depth := 0
+	indent := func() string { return strings.Repeat("  ", depth) }
+
+	for i, h := range headings {
+		level := h.Level - minLevel + 1
+		if i == 0 {
+			sb.WriteString("<ul>\n")
+			depth++
+		} else if level > depth {
+			// Open nested lists for each level increase
+			for depth < level {
+				sb.WriteString(indent() + "<ul>\n")
+				depth++
+			}
+		} else if level < depth {
+			// Close lists and parent <li> for each level decrease
+			for depth > level {
+				depth--
+				sb.WriteString(indent() + "</ul>\n")
+				depth--
+				sb.WriteString(indent() + "</li>\n")
+				depth++
+			}
+		}
+		// Write the <li> — leave it open in case children follow
+		sb.WriteString(fmt.Sprintf("%s<li><a href=\"#%s\">%s</a>", indent(), h.ID, h.Text))
+		// Check if the next heading is deeper (has children)
+		hasChildren := i+1 < len(headings) && headings[i+1].Level-minLevel+1 > level
+		if hasChildren {
+			sb.WriteString("\n")
+		} else {
+			sb.WriteString("</li>\n")
+		}
+	}
+	// Close all remaining open lists
+	for depth > 1 {
+		depth--
+		sb.WriteString(indent() + "</ul>\n")
+		depth--
+		sb.WriteString(indent() + "</li>\n")
+		depth++
 	}
 	sb.WriteString("</ul>")
 	return sb.String()

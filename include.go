@@ -85,3 +85,20 @@ func syntaxThemeCSS(theme string) string {
 	}
 	return buf.String()
 }
+
+// syntaxThemeDarkCSS returns the chroma CSS for the given theme wrapped in
+// both a prefers-color-scheme media query and a .dark class selector.
+func syntaxThemeDarkCSS(theme string) string {
+	css := syntaxThemeCSS(theme)
+	if css == "" {
+		return ""
+	}
+	var sb strings.Builder
+	sb.WriteString("@media (prefers-color-scheme: dark) {\n")
+	sb.WriteString(css)
+	sb.WriteString("}\n")
+	sb.WriteString(".dark {\n")
+	sb.WriteString(css)
+	sb.WriteString("}\n")
+	return sb.String()
+}

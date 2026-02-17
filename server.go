@@ -5,9 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -82,21 +80,6 @@ func fileServer(dir string) http.Handler {
 	})
 }
 
-func openBrowser(url string) {
-	var cmd string
-	switch runtime.GOOS {
-	case "darwin":
-		cmd = "open"
-	case "linux":
-		cmd = "xdg-open"
-	case "windows":
-		cmd = "start"
-	default:
-		return
-	}
-	exec.Command(cmd, url).Start()
-}
-
 func run(dir string, port int) error {
 	if err := build(dir); err != nil {
 		return err
@@ -165,6 +148,5 @@ func run(dir string, port int) error {
 	addr := fmt.Sprintf(":%d", port)
 	url := fmt.Sprintf("http://localhost%s", addr)
 	log.Printf("Serving at %s", url)
-	openBrowser(url)
 	return http.ListenAndServe(addr, mux)
 }
