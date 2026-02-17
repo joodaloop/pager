@@ -126,6 +126,16 @@ func build(dir string) error {
 		cssRefs = versioned
 	}
 
+	// Syntax theme: inline chroma CSS if theme is set
+	if cfg.Theme != "" {
+		css := syntaxThemeCSS(cfg.Theme)
+		if css == "" {
+			warn("unknown syntax theme: %s", cfg.Theme)
+		} else {
+			inlineStyles = append(inlineStyles, template.CSS(css))
+		}
+	}
+
 	data := PageData{
 		Title:        cfg.Title,
 		Description:  cfg.Description,

@@ -53,7 +53,6 @@ func highlightCode(data []byte, src string) string {
 	}
 	lexer = chroma.Coalesce(lexer)
 
-	style := styles.Get("github")
 	formatter := chromahtml.New(
 		chromahtml.WithClasses(true),
 		chromahtml.PreventSurroundingPre(false),
@@ -66,9 +65,23 @@ func highlightCode(data []byte, src string) string {
 	}
 
 	var buf bytes.Buffer
-	if err := formatter.Format(&buf, style, iterator); err != nil {
+	if err := formatter.Format(&buf, styles.Fallback, iterator); err != nil {
 		lang := strings.TrimPrefix(ext, ".")
 		return fmt.Sprintf("<pre><code class=\"language-%s\">%s</code></pre>", lang, html.EscapeString(string(data)))
+	}
+	return buf.String()
+}
+
+// syntaxThemeCSS returns the chroma CSS for the given theme name, or "" if not found.
+func syntaxThemeCSS(theme string) string {
+	style := styles.Get(theme)
+	if style == styles.Fallback && theme != "fallback" {
+		return ""
+	}
+	formatter := chromahtml.New(chromahtml.WithClasses(true))
+	var buf bytes.Buffer
+	if err := formatter.WriteCSS(&buf, style); err != nil {
+		return ""
 	}
 	return buf.String()
 }

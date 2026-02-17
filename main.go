@@ -33,6 +33,7 @@ type Config struct {
 	CSS         []string `yaml:"css"`
 	InlineCSS   bool     `yaml:"inline_css"`
 	Inject      string   `yaml:"inject"`
+	Theme       string   `yaml:"theme"`
 }
 
 type heading struct {
