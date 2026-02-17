@@ -26,3 +26,5 @@ And I end up wishing for a few nicities while authoring the `index.html` page th
 - Live page reload
 
 So that's what Pager provides, **the best `index.html` authoring experience** I could come up with, for those of us who still do things by hand sometimes.
+
+**Get started at [github.com/joodaloop/pager](https://github.com/joodaloop/pager).**

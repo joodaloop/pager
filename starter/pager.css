@@ -10,10 +10,55 @@
   src: url("/assets/Manrope.woff2") format("woff2");
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -moz-text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
 body {
+  margin: 0;
+  min-height: 100dvh;
   font-size: var(--font-size);
   font-family: var(--font-body);
   line-height: 1.6em;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+:target {
+  scroll-margin-block: 5ex;
+}
+
+::selection {
+  background: #cccccc;
+}
+
+main {
+  padding: 1.5em;
+  max-width: 46em;
+  margin: 1.2em;
+  border: solid 3px black;
+}
+
+@media screen and (min-width: 800px) {
+  main {
+    margin: 3em auto;
+    padding: 3em;
+  }
 }
 
 a:not([class]) {
@@ -79,6 +124,12 @@ h5 {
 ol,
 ul {
   padding-left: 1.2em;
+}
+
+ul[role="list"],
+ol[role="list"] {
+  list-style: none;
+  padding-left: 0em;
 }
 
 ol li,
