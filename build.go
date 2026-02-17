@@ -76,9 +76,9 @@ func build(dir string) error {
 			}
 		}
 	}
-	content, err := os.ReadFile(filepath.Join(dir, "content.html"))
+	content, err := os.ReadFile(filepath.Join(dir, "pager.html"))
 	if err != nil {
-		return fmt.Errorf("content.html: %w", err)
+		return fmt.Errorf("pager.html: %w", err)
 	}
 
 	// Inline CSS: read file contents into <style> tags instead of <link>
@@ -188,7 +188,7 @@ func build(dir string) error {
 	if err != nil {
 		warn("failed to generate index.md: %v", err)
 	} else {
-		header := fmt.Sprintf("---\ntitle: %q\ndescription: %q\ndomain: %q\n---\n\n", cfg.Title, cfg.Description, cfg.Domain)
+		header := fmt.Sprintf("<!-- THIS FILE IS AUTO-GENERATED FROM INDEX.HTML -->\n---\ntitle: %q\ndescription: %q\ndomain: %q\n---\n\n", cfg.Title, cfg.Description, cfg.Domain)
 		if err := os.WriteFile(filepath.Join(dir, "index.md"), []byte(header+md), 0644); err != nil {
 			return err
 		}

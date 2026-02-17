@@ -1,8 +1,11 @@
 # yaml-language-server: $schema=
-title: My Site
-description: A new site
+title: Pager
+description: A very interesting page
 favicon: ""
 card: ""
 domain: example.com
 port: 8080
-css: []
+css:
+  - "css/reset.css"
+  - "css/typography.css"
+  - "css/styles.css"
