@@ -1,9 +1,9 @@
 # yaml-language-server: $schema=
 title: Pager
 description: A very interesting page
-favicon: "assets/favicon.png"
-card: "assets/card.jpg"
+favicon: "/assets/favicon.png"
+card: "/assets/card.jpg"
 domain: pager.joodaloop.com
 port: 9463
 css:
-  - "pager.css"
+  - "/pager.css"
