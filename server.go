@@ -146,7 +146,7 @@ func run(dir string, port int) error {
 	mux.HandleFunc("/_reload", sseHandler)
 	mux.Handle("/", fileServer(dir))
 
-	for {
+	for attempts := 0; attempts < 50; attempts++ {
 		addr := fmt.Sprintf(":%d", port)
 		ln, err := net.Listen("tcp", addr)
 		if err != nil {
@@ -156,4 +156,5 @@ func run(dir string, port int) error {
 		log.Printf("Serving at http://localhost:%d", port)
 		return http.Serve(ln, mux)
 	}
+	return fmt.Errorf("could not find an open port after 50 attempts")
 }

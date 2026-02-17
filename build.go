@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
+	"io/fs"
 	"html/template"
 	"io"
 	"log"
@@ -227,25 +228,22 @@ func deploy(dir string) error {
 }
 
 func scaffold(name string) error {
-	if err := os.MkdirAll(name, 0755); err != nil {
-		return err
-	}
-	entries, err := starterFS.ReadDir("starter")
-	if err != nil {
-		return err
-	}
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
-		}
-		data, err := starterFS.ReadFile("starter/" + e.Name())
+	return fs.WalkDir(starterFS, "starter", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if err := os.WriteFile(filepath.Join(name, e.Name()), data, 0644); err != nil {
+		rel, _ := filepath.Rel("starter", path)
+		dest := filepath.Join(name, rel)
+		if d.IsDir() {
+			return os.MkdirAll(dest, 0755)
+		}
+		data, err := starterFS.ReadFile(path)
+		if err != nil {
 			return err
 		}
-	}
-	log.Printf("Created %s/", name)
-	return nil
+		if err := os.WriteFile(dest, data, 0644); err != nil {
+			return err
+		}
+		return nil
+	})
 }

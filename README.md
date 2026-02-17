@@ -19,7 +19,7 @@ And write your content in `pager.html`, no need for `<body>` or `<head>` tags, s
 
 Speaking of which, you can start the server by entering the site's root and running `pager`. This builds `index.html` and `index.md`, starts a server that live-reloads on any file change. 
 
-#### **NOTE:** UNLIKE WHAT YOU MIGHT EXPECT, THE HTML AND MARKDOWN `index` FILES ARE NOT MEANT TO BE EDITED BY YOU. THEY ARE GENERATED FROM THE `pager.html` AND `pager.yaml` FILES
+#### **NOTE:** Unlike what you might expect, the `index.html` and `index.md` files are not meant to be edited by you. They are generated from the `pager.html` file, which is the thing you *should* be editing.
 
 
 ## Additional features
@@ -87,6 +87,8 @@ We have a small set of CLI commands, and all you really need in practice is the 
 pager new mysite
 cd mysite
 ```
+
+This is optional, Pager will work in any folder that has a `pager.html` and `pager.yaml` file, and you can arrange everything else however you like. This command just scaffolds my preferred structure to get you up and running.
 
 ### Run the dev server:
 
