@@ -356,7 +356,13 @@ func processContent(content string, dir string) string {
 	result := buf.String()
 
 	if hasTOC {
-		result = strings.ReplaceAll(result, tocPlaceholder, buildTOC(s.headings))
+		var tocHeadings []heading
+		for _, h := range s.headings {
+			if h.Level >= 2 {
+				tocHeadings = append(tocHeadings, h)
+			}
+		}
+		result = strings.ReplaceAll(result, tocPlaceholder, buildTOC(tocHeadings))
 	}
 
 	return result
