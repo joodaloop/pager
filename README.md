@@ -3,16 +3,17 @@
 A single-page site builder with live reload, auto-linked headings, image aspect ratios, markdown support, and accessibility warnings.
 
 All you need are these two files in any folder:
-project/
+```
 ├── pager.yaml
 └── pager.html
+```
 
 You set up your site details in `pager.yaml` like so:
 ```yaml
 title: My Site
 description: A cool site
-favicon: favicon.png
-card: card.png
+favicon: link-to-favicon.png
+card: link-to-card.png
 domain: example.com
 port: 8080
 css:
