@@ -2,6 +2,11 @@
 
 A single-page site builder with live reload, auto-linked headings, image aspect ratios, markdown support, and accessibility warnings.
 
+All you need are these two files in any folder:
+project/
+├── pager.yaml
+└── pager.html
+
 You set up your site details in `pager.yaml` like so:
 ```yaml
 title: My Site
@@ -15,9 +20,11 @@ css:
 inject: '<!-- anything you want to add to the <head> of the page -->'
 ```
 
-And write your content in `pager.html`, no need for `<body>` or `<head>` tags, start directly with the content. I use `<main>` as content root myself. Add your stylesheets, assets and other resources however you like as long as you link to them correctly. But don't worry, if you have any broken links, the server will warn you.
+And write your content in `pager.html`.
 
-Speaking of which, you can start the server by entering the site's root and running `pager`. This builds `index.html` and `index.md`, starts a server that live-reloads on any file change. 
+No need for `<body>` or `<head>` tags, start directly with the content. I use `<main>` as content root myself. Add your stylesheets, assets and other resources however you like as long as you link to them correctly. But don't worry, if you have any broken links, the server will warn you.
+
+Once you have both files, you can start the server by entering the site's root and running `pager`. This builds `index.html` and `index.md`, starts a server that live-reloads on any file change. 
 
 #### **NOTE:** Unlike what you might expect, the `index.html` and `index.md` files are not meant to be edited by you. They are generated from the `pager.html` file, which is the thing you *should* be editing.
 
@@ -30,7 +37,7 @@ Apart from giving you good HTML skeleton from your config details, Pager also co
 
 If you have the [Tailwind CLI](https://tailwindcss.com/docs/installation/tailwind-cli) or [executable](https://github.com/tailwindlabs/tailwindcss/releases/tag/v4.2.0) installed globally, adding a `@import "tailwindcss";` to the beginning of any of your CSS files will auto-apply Tailwind's styling to your built site.
 
-### <convert> snippets
+### `<convert>` snippets
 
 Convert markdown or CSV files to HTML with the `<convert>` tag:
 
