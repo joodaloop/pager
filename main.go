@@ -23,6 +23,10 @@ func warn(format string, args ...any) {
 	log.Printf("\033[33mWARNING\033[0m %s", msg)
 }
 
+func buildFail(err error) {
+	log.Printf("\033[31mBUILD FAILED:\033[0m %v", err)
+}
+
 type Config struct {
 	Title       string   `yaml:"title"`
 	Description string   `yaml:"description"`
@@ -65,7 +69,8 @@ func main() {
 
 	if len(os.Args) >= 2 && os.Args[1] == "build" {
 		if err := build("."); err != nil {
-			log.Fatal(err)
+			buildFail(err)
+			os.Exit(1)
 		}
 		log.Printf("Built index.html")
 		return
@@ -98,6 +103,7 @@ func main() {
 		port = 8080
 	}
 	if err := run(".", port); err != nil {
-		log.Fatal(err)
+		buildFail(err)
+		os.Exit(1)
 	}
 }
