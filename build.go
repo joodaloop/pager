@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io/fs"
 	"html/template"
@@ -86,11 +87,39 @@ func build(dir string) error {
 		return fmt.Errorf("pager.html: %w", err)
 	}
 
-	// Inline CSS: read file contents into <style> tags instead of <link>
+	// Tailwind CSS: detect @import "tailwindcss", process and inline the output
 	var inlineStyles []template.CSS
+	tailwindFiles := make(map[string]bool)
+	for _, css := range cfg.CSS {
+		if strings.HasPrefix(css, "http") {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(dir, css))
+		if err != nil {
+			continue
+		}
+		if !strings.Contains(string(data), `@import "tailwindcss"`) {
+			continue
+		}
+		cmd := exec.Command("tailwindcss", "-i", filepath.Join(dir, css), "--output", "-")
+		cmd.Dir = dir
+		out, err := cmd.Output()
+		if err != nil {
+			if errors.Is(err, exec.ErrNotFound) {
+				warn("tailwindcss not found — install with: npm i -g @tailwindcss/cli or download the binary from https://github.com/tailwindlabs/tailwindcss/releases/tag/v4.2.0")
+			} else {
+				warn("tailwind failed for %s: %v", css, err)
+			}
+			continue
+		}
+		inlineStyles = append(inlineStyles, template.CSS(out))
+		tailwindFiles[css] = true
+	}
+
+	// Inline CSS: read file contents into <style> tags instead of <link>
 	if cfg.InlineCSS {
 		for _, css := range cfg.CSS {
-			if strings.HasPrefix(css, "http") {
+			if strings.HasPrefix(css, "http") || tailwindFiles[css] {
 				continue
 			}
 			data, err := os.ReadFile(filepath.Join(dir, css))
@@ -102,16 +131,16 @@ func build(dir string) error {
 		}
 	}
 
-	// When inlining, only keep remote CSS as <link> refs
-	cssRefs := cfg.CSS
-	if cfg.InlineCSS {
-		var remote []string
-		for _, css := range cfg.CSS {
-			if strings.HasPrefix(css, "http") {
-				remote = append(remote, css)
-			}
+	// Build <link> refs: exclude tailwind files (always inlined) and local files when inlining
+	var cssRefs []string
+	for _, css := range cfg.CSS {
+		if tailwindFiles[css] {
+			continue
 		}
-		cssRefs = remote
+		if cfg.InlineCSS && !strings.HasPrefix(css, "http") {
+			continue
+		}
+		cssRefs = append(cssRefs, css)
 	}
 
 	// Cache-busting: append content hash as query string

@@ -26,6 +26,10 @@ Speaking of which, you can start the server by entering the site's root and runn
 
 Apart from giving you good HTML skeleton from your config details, Pager also comes with:
 
+### Support for Tailwind CLI
+
+If you have the [Tailwind CLI](https://tailwindcss.com/docs/installation/tailwind-cli) or [executable](https://github.com/tailwindlabs/tailwindcss/releases/tag/v4.2.0) installed globally, adding a `@import "tailwindcss";` to the beginning of any of your CSS files will auto-apply Tailwind's styling to your built site.
+
 ### <convert> snippets
 
 Convert markdown or CSV files to HTML with the `<convert>` tag:

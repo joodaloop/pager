@@ -21,11 +21,11 @@
     <meta name="twitter:description" content="{{ .Description }}" />
     <meta name="twitter:image" content="{{ .Site.Domain }}{{ .Card }}" />
 
-    {{- range .CSS }}
-    <link rel="stylesheet" type="text/css" href="{{ . }}" />
-    {{- end }}
     {{- range .InlineStyles }}
     <style>{{ . }}</style>
+    {{- end }}
+    {{- range .CSS }}
+    <link rel="stylesheet" type="text/css" href="{{ . }}" />
     {{- end }}
     {{ .Inject }}
   </head>
