@@ -15,6 +15,7 @@ import (
 	"unicode"
 
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
@@ -261,6 +262,8 @@ func buildTOC(headings []heading) string {
 }
 
 func processContent(content string, dir string) string {
+	md := goldmark.New(goldmark.WithExtensions(extension.GFM, extension.Typographer))
+
 	// Expand <convert src="..."> tags: .md → HTML, .csv → table
 	convertRe := regexp.MustCompile(`<convert\s+src="([^"]*)"\s*/?>(?:</convert>)?`)
 	content = convertRe.ReplaceAllStringFunc(content, func(match string) string {
@@ -280,7 +283,7 @@ func processContent(content string, dir string) string {
 		switch ext {
 		case ".md":
 			var buf bytes.Buffer
-			if err := goldmark.Convert(data, &buf); err != nil {
+			if err := md.Convert(data, &buf); err != nil {
 				warn("<convert src=%q> failed to convert markdown: %v", src, err)
 				return ""
 			}
@@ -358,7 +361,7 @@ func processContent(content string, dir string) string {
 	if hasTOC {
 		var tocHeadings []heading
 		for _, h := range s.headings {
-			if h.Level >= 2 {
+			if h.Level >= 2 && h.Level <= 4 {
 				tocHeadings = append(tocHeadings, h)
 			}
 		}
