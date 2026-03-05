@@ -1,6 +1,6 @@
 :root {
   --font-size: 16px;
-  --spacing: calc(1.1 * var(--font-size));
+  --text-spacing: calc(1.1 * var(--font-size));
   --font-body: system-ui;
   --font-headings: Manrope;
 }
@@ -73,7 +73,7 @@ h4,
 h5,
 h6 {
   overflow-wrap: break-word;
-  margin: 1.2em 0em var(--spacing) 0em;
+  margin: 1.2em 0em var(--text-spacing) 0em;
 }
 
 p,
@@ -82,7 +82,7 @@ details,
 pre,
 ul,
 ol {
-  margin: 0em 0em var(--spacing) 0em;
+  margin: 0em 0em var(--text-spacing) 0em;
 }
 
 p:last-child,
@@ -99,7 +99,7 @@ h1 {
   font-family: var(--font-headings);
   text-wrap: pretty;
   font-weight: 800;
-  margin: 0em 0em var(--spacing) 0em;
+  margin: 0em 0em var(--text-spacing) 0em;
 }
 
 h2 {
@@ -134,11 +134,11 @@ ol[role="list"] {
 
 ol li,
 ul li {
-  margin: calc(var(--spacing) * 0.25) 0em;
+  margin: calc(var(--text-spacing) * 0.25) 0em;
 }
 
 blockquote {
-  padding: var(--spacing);
+  padding: var(--text-spacing);
   background-color: #eeeeee;
   border-radius: 8px;
 }
@@ -166,5 +166,5 @@ cite {
 }
 
 hr {
-  margin: calc(var(--spacing) * 1.5) 0;
+  margin: calc(var(--text-spacing) * 1.5) 0;
 }

@@ -5,9 +5,9 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"io/fs"
 	"html/template"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 	"os/exec"
@@ -265,6 +265,12 @@ func scaffold(name string) error {
 		dest := filepath.Join(name, rel)
 		if d.IsDir() {
 			return os.MkdirAll(dest, 0755)
+		}
+		if _, err := os.Stat(dest); err == nil {
+			warn("skipping existing file: %s", dest)
+			return nil
+		} else if !os.IsNotExist(err) {
+			return err
 		}
 		data, err := starterFS.ReadFile(path)
 		if err != nil {
