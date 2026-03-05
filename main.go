@@ -60,9 +60,21 @@ type PageData struct {
 }
 
 func main() {
-	if len(os.Args) >= 3 && os.Args[1] == "new" {
-		if err := scaffold(os.Args[2]); err != nil {
+	if len(os.Args) >= 2 && os.Args[1] == "new" {
+		target := "."
+		if len(os.Args) >= 3 {
+			target = os.Args[2]
+		}
+		if len(os.Args) > 3 {
+			log.Fatal("usage: pager new [site-name]")
+		}
+		if err := scaffold(target); err != nil {
 			log.Fatal(err)
+		}
+		if target == "." {
+			log.Printf("Scaffolded pager starter files in current directory")
+		} else {
+			log.Printf("Scaffolded pager starter files in %s", target)
 		}
 		return
 	}

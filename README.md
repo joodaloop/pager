@@ -111,11 +111,19 @@ We have a small set of CLI commands, and all you really need in practice is the 
 ### Create a new site:
 
 ```sh
+pager new
+```
+
+This scaffolds starter files into the current directory.
+
+If you want Pager to do it inside a folder called **mysite** instead:
+
+```sh
 pager new mysite
 cd mysite
 ```
 
-This is optional, Pager will work in any folder that has a `pager.html` and `pager.yaml` file, and you can arrange everything else however you like. This command just scaffolds my preferred structure to get you up and running.
+This is optional. Pager will work in any folder that has a `pager.html` and `pager.yaml` file, and you can arrange everything else however you like. This command just scaffolds my preferred structure to get you up and running.
 
 ### Run the dev server:
 
