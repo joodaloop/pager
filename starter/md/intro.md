@@ -12,7 +12,8 @@ And I end up wishing for a few nicities while authoring the `index.html` page th
 - Copying over the right `<meta>` tags with the site details
 - Remembering to add social media card images
 - Syntax highlighting for codeblocks
-- Mixing HTML with Markdown
+- The occassional Tailwind class
+- Writing prose in Markdown
 - Live page reload
 
 So that's what Pager provides, **the best `index.html` authoring experience** I could come up with, for those of us who still do things by hand sometimes.

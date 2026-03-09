@@ -16,6 +16,7 @@ favicon: link-to-favicon.png
 card: link-to-card.png
 domain: example.com
 port: 8080
+tailwind: true
 css:
   - style.css
 inject: '<!-- anything you want to add to the <head> of the page -->'
@@ -51,7 +52,9 @@ Apart from giving you good HTML skeleton from your config details, Pager also co
 
 ### Support for Tailwind CLI
 
-If you have the [Tailwind CLI](https://tailwindcss.com/docs/installation/tailwind-cli) or [executable](https://github.com/tailwindlabs/tailwindcss/releases/tag/v4.2.0) installed globally, adding a `@import "tailwindcss";` to the beginning of any of your CSS files will auto-apply Tailwind's styling to your built site.
+If you have the [Tailwind CLI](https://tailwindcss.com/docs/installation/tailwind-cli) or [executable](https://github.com/tailwindlabs/tailwindcss/releases/tag/v4.2.0) installed globally, set `tailwind: true` in `pager.yaml` and Pager will compile your Tailwind classes and inline the result into the page.
+
+This is independent from `css:`. Entries in `css:` are treated as normal stylesheets (linked by default, inlined only when `inline_css: true`).
 
 ### `<convert>` snippets
 

@@ -1,17 +1,21 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -81,8 +85,107 @@ func fileServer(dir string) http.Handler {
 	})
 }
 
+func readTailwindLogs(input, stream string, r io.Reader, onDone func()) {
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := scanner.Text()
+		log.Printf("[tailwind:%s:%s] %s", input, stream, line)
+		if strings.Contains(line, "Done in") {
+			onDone()
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		warn("tailwind log stream read failed for %s (%s): %v", input, stream, err)
+	}
+}
+
+func startTailwindWatcher(dir string) (string, <-chan struct{}, func()) {
+	raw, err := os.ReadFile(filepath.Join(dir, "pager.yaml"))
+	if err != nil {
+		return "", nil, func() {}
+	}
+
+	var cfg Config
+	if err := yaml.Unmarshal(raw, &cfg); err != nil {
+		warn("could not parse pager.yaml for Tailwind watcher: %v", err)
+		return "", nil, func() {}
+	}
+
+	if !cfg.Tailwind {
+		return "", nil, func() {}
+	}
+
+	tmpDir, err := os.MkdirTemp("", "pager-tailwind-*")
+	if err != nil {
+		warn("could not create temp directory for Tailwind watcher: %v", err)
+		return "", nil, func() {}
+	}
+	inputPath := filepath.Join(tmpDir, "input.css")
+	if err := os.WriteFile(inputPath, []byte(syntheticTailwindInput), 0644); err != nil {
+		warn("could not create synthetic Tailwind input: %v", err)
+		_ = os.RemoveAll(tmpDir)
+		return "", nil, func() {}
+	}
+	outPath := filepath.Join(tmpDir, "output.css")
+
+	tailwindDone := make(chan struct{}, 1)
+	notifyTailwindDone := func() {
+		select {
+		case tailwindDone <- struct{}{}:
+		default:
+		}
+	}
+
+	cmd := exec.Command("tailwindcss", "-i", inputPath, "-o", outPath, "--watch=always")
+	cmd.Dir = dir
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		warn("could not capture Tailwind stdout: %v", err)
+		_ = os.RemoveAll(tmpDir)
+		return "", nil, func() {}
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		warn("could not capture Tailwind stderr: %v", err)
+		_ = os.RemoveAll(tmpDir)
+		return "", nil, func() {}
+	}
+	if err := cmd.Start(); err != nil {
+		warn("could not start Tailwind watcher: %v", err)
+		_ = os.RemoveAll(tmpDir)
+		return "", nil, func() {}
+	}
+	go readTailwindLogs("synthetic", "stdout", stdout, notifyTailwindDone)
+	go readTailwindLogs("synthetic", "stderr", stderr, notifyTailwindDone)
+	log.Printf("Started Tailwind watcher (synthetic input)")
+
+	cleanup := func() {
+		if cmd.Process != nil {
+			_ = cmd.Process.Kill()
+			_, _ = cmd.Process.Wait()
+		}
+		_ = os.RemoveAll(tmpDir)
+	}
+
+	return outPath, tailwindDone, cleanup
+}
+
 func run(dir string, port int) error {
-	if err := build(dir); err != nil {
+	tailwindOutputPath, tailwindDone, stopTailwindWatcher := startTailwindWatcher(dir)
+	defer stopTailwindWatcher()
+	runBuild := func(trigger string) error {
+		started := time.Now()
+		log.Printf("[perf] rebuild_start trigger=%s", trigger)
+		err := buildWithTailwindOutput(dir, tailwindOutputPath)
+		if err != nil {
+			log.Printf("[perf] rebuild_done trigger=%s status=error elapsed=%s", trigger, time.Since(started))
+			return err
+		}
+		log.Printf("[perf] rebuild_done trigger=%s status=ok elapsed=%s", trigger, time.Since(started))
+		return nil
+	}
+
+	if err := runBuild("startup"); err != nil {
 		return err
 	}
 	log.Printf("Built index.html")
@@ -107,14 +210,48 @@ func run(dir string, port int) error {
 	})
 
 	go func() {
-		var timer *time.Timer
+		const fsDebounceDelay = 300 * time.Millisecond
+		const tailwindDebounceDelay = 50 * time.Millisecond
+		const relevantOps = fsnotify.Write | fsnotify.Create | fsnotify.Rename | fsnotify.Remove
+		const generatedHTML = "index.html"
+		const generatedMarkdown = "index.md"
+		timer := time.NewTimer(fsDebounceDelay)
+		if !timer.Stop() {
+			select {
+			case <-timer.C:
+			default:
+			}
+		}
+		defer timer.Stop()
+
+		var timerC <-chan time.Time
+		pendingRebuild := false
+		pendingFSEvents := 0
+		pendingTailwindEvents := 0
+		tailwindAwaitingFS := false
+		scheduleRebuild := func(delay time.Duration) {
+			pendingRebuild = true
+			if !timer.Stop() {
+				select {
+				case <-timer.C:
+				default:
+				}
+			}
+			timer.Reset(delay)
+			timerC = timer.C
+		}
+
 		for {
 			select {
 			case event, ok := <-watcher.Events:
 				if !ok {
 					return
 				}
-				if filepath.Base(event.Name) == "index.html" || filepath.Base(event.Name) == "index.md" {
+				if event.Op&relevantOps == 0 {
+					continue
+				}
+				base := filepath.Base(event.Name)
+				if base == generatedHTML || base == generatedMarkdown {
 					continue
 				}
 				if event.Op&fsnotify.Create != 0 {
@@ -122,17 +259,46 @@ func run(dir string, port int) error {
 						watcher.Add(event.Name)
 					}
 				}
-				if timer != nil {
-					timer.Stop()
+				pendingFSEvents++
+				tailwindAwaitingFS = true
+				scheduleRebuild(fsDebounceDelay)
+			case _, ok := <-tailwindDone:
+				if !ok {
+					tailwindDone = nil
+					continue
 				}
-				timer = time.AfterFunc(300*time.Millisecond, func() {
-					if err := build(dir); err != nil {
-						buildFail(err)
-					} else {
-						log.Printf("Rebuilt index.html")
-					}
-					notifyClients()
-				})
+				if !tailwindAwaitingFS {
+					// Ignore spontaneous Tailwind completions to avoid rebuild loops
+					// caused by generated index.html changes being re-scanned.
+					continue
+				}
+				pendingTailwindEvents++
+				tailwindAwaitingFS = false
+				scheduleRebuild(tailwindDebounceDelay)
+			case <-timerC:
+				timerC = nil
+				if !pendingRebuild {
+					continue
+				}
+				trigger := "unknown"
+				switch {
+				case pendingFSEvents > 0 && pendingTailwindEvents > 0:
+					trigger = fmt.Sprintf("fs+tailwind fs_events=%d tailwind_events=%d", pendingFSEvents, pendingTailwindEvents)
+				case pendingFSEvents > 0:
+					trigger = fmt.Sprintf("fs fs_events=%d", pendingFSEvents)
+				case pendingTailwindEvents > 0:
+					trigger = fmt.Sprintf("tailwind tailwind_events=%d", pendingTailwindEvents)
+				}
+				pendingRebuild = false
+				pendingFSEvents = 0
+				pendingTailwindEvents = 0
+				tailwindAwaitingFS = false
+				if err := runBuild(trigger); err != nil {
+					buildFail(err)
+				} else {
+					log.Printf("Rebuilt index.html")
+				}
+				notifyClients()
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return

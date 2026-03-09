@@ -35,6 +35,7 @@ type Config struct {
 	Domain      string   `yaml:"domain"`
 	Port        int      `yaml:"port"`
 	CSS         []string `yaml:"css"`
+	Tailwind    bool     `yaml:"tailwind"`
 	InlineCSS   bool     `yaml:"inline_css"`
 	Inject      string   `yaml:"inject"`
 	Theme       string   `yaml:"theme"`
