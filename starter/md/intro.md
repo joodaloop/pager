@@ -8,7 +8,7 @@ I made this because I spend a fair amount of time writing websites that consist 
 - [webcraft.joodaloop.com](https://webcraft.joodaloop.com)
 - [hypertext.joodaloop.com](https://hypertext.joodaloop.com)
 
-And I end up wishing for a few nicities while authoring the `index.html` page that makes up the site. Things like...
+And I end up wishing for a few niceties while authoring the `index.html` page that makes up the site. Things like...
 - Copying over the right `<meta>` tags with the site details
 - Remembering to add social media card images
 - Syntax highlighting for codeblocks

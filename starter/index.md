@@ -17,12 +17,13 @@ I made this because I spend a fair amount of time writing websites that consist 
 - [webcraft.joodaloop.com](https://webcraft.joodaloop.com)
 - [hypertext.joodaloop.com](https://hypertext.joodaloop.com)
 
-And I end up wishing for a few nicities while authoring the `index.html` page that makes up the site. Things like…
+And I end up wishing for a few niceties while authoring the `index.html` page that makes up the site. Things like…
 
 - Copying over the right `<meta>` tags with the site details
 - Remembering to add social media card images
 - Syntax highlighting for codeblocks
-- Mixing HTML with Markdown
+- The occassional Tailwind class
+- Writing prose in Markdown
 - Live page reload
 
 So that’s what Pager provides, **the best `index.html` authoring experience** I could come up with, for those of us who still do things by hand sometimes.

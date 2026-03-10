@@ -169,8 +169,7 @@ func processNode(n *html.Node, s *processState) {
 			}
 		}
 
-		// External links: add target="_blank" and rel="noopener"
-		// Local links: collect for validation
+		// Validate links and collect local links for later checks.
 		if n.Data == "a" {
 			href := getAttr(n, "href")
 			if strings.HasPrefix(href, "http://") || strings.HasPrefix(href, "https://") {
@@ -178,12 +177,6 @@ func processNode(n *html.Node, s *processState) {
 					warn("<a href=%q> is not a valid URL", href)
 				} else if strings.Contains(u.Host, "localhost") || strings.Contains(u.Host, "127.0.0.1") {
 					warn("<a href=%q> links to localhost", href)
-				}
-				if !hasAttr(n, "target") {
-					n.Attr = append(n.Attr, html.Attribute{Key: "target", Val: "_blank"})
-				}
-				if !hasAttr(n, "rel") {
-					n.Attr = append(n.Attr, html.Attribute{Key: "rel", Val: "noopener"})
 				}
 			} else if href == "" {
 				warn("<a> has empty href attribute")
