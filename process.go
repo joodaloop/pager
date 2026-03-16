@@ -4,17 +4,19 @@ import (
 	"bytes"
 	"fmt"
 	"image"
-	"net/url"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"unicode"
 
+	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
 	"github.com/yuin/goldmark"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
@@ -255,7 +257,16 @@ func buildTOC(headings []heading) string {
 }
 
 func processContent(content string, dir string) string {
-	md := goldmark.New(goldmark.WithExtensions(extension.GFM, extension.Typographer))
+	md := goldmark.New(goldmark.WithExtensions(
+		extension.GFM,
+		extension.Typographer,
+		highlighting.NewHighlighting(
+			highlighting.WithFormatOptions(
+				chromahtml.WithClasses(true),
+				chromahtml.PreventSurroundingPre(false),
+			),
+		),
+	))
 
 	// Expand <convert src="..."> tags: .md → HTML, .csv → table
 	convertRe := regexp.MustCompile(`<convert\s+src="([^"]*)"\s*/?>(?:</convert>)?`)

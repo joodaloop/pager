@@ -60,12 +60,14 @@ func highlightCode(data []byte, src string) string {
 
 	iterator, err := lexer.Tokenise(nil, string(data))
 	if err != nil {
+		warn("<syntax src=%q> failed to tokenize: %v", src, err)
 		lang := strings.TrimPrefix(ext, ".")
 		return fmt.Sprintf("<pre><code class=\"language-%s\">%s</code></pre>", lang, html.EscapeString(string(data)))
 	}
 
 	var buf bytes.Buffer
 	if err := formatter.Format(&buf, styles.Fallback, iterator); err != nil {
+		warn("<syntax src=%q> failed to format: %v", src, err)
 		lang := strings.TrimPrefix(ext, ".")
 		return fmt.Sprintf("<pre><code class=\"language-%s\">%s</code></pre>", lang, html.EscapeString(string(data)))
 	}

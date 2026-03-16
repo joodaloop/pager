@@ -5,6 +5,7 @@ favicon: "/assets/favicon.png"
 card: "/assets/card.jpg"
 domain: pager.joodaloop.com
 port: 9463
+theme: github
 tailwind: false
 css:
   - "/pager.css"
