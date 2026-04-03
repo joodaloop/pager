@@ -54,6 +54,63 @@ func isRemoteAsset(path string) bool {
 	return strings.HasPrefix(path, "http")
 }
 
+func hasGlobPattern(path string) bool {
+	return strings.ContainsAny(path, "*?[")
+}
+
+func expandCSSEntries(dir string, entries []string) []string {
+	var expanded []string
+	seen := make(map[string]bool)
+
+	appendUnique := func(path string) {
+		if seen[path] {
+			return
+		}
+		seen[path] = true
+		expanded = append(expanded, path)
+	}
+
+	for _, entry := range entries {
+		if isRemoteAsset(entry) || !hasGlobPattern(entry) {
+			appendUnique(entry)
+			continue
+		}
+
+		matches, err := filepath.Glob(filepath.Join(dir, entry))
+		if err != nil {
+			warn("invalid CSS glob pattern: %s", entry)
+			continue
+		}
+		if len(matches) == 0 {
+			warn("CSS glob matched no files: %s", entry)
+			continue
+		}
+
+		added := 0
+		for _, match := range matches {
+			info, err := os.Stat(match)
+			if err != nil || info.IsDir() {
+				continue
+			}
+			rel, err := filepath.Rel(dir, match)
+			if err != nil {
+				continue
+			}
+			rel = filepath.ToSlash(rel)
+			if strings.HasPrefix(entry, "/") {
+				rel = "/" + rel
+			}
+			appendUnique(rel)
+			added++
+		}
+		if added == 0 {
+			warn("CSS glob matched no files: %s", entry)
+		}
+	}
+
+	return expanded
+}
+
 func hashFile(path string) (string, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -84,6 +141,7 @@ func buildWithTailwindOutput(dir, tailwindOutputPath string) error {
 	if err := yaml.Unmarshal(raw, &cfg); err != nil {
 		return fmt.Errorf("pager.yaml: %w", err)
 	}
+	cssEntries := expandCSSEntries(dir, cfg.CSS)
 	perf.mark("config", stepStarted)
 
 	stepStarted = time.Now()
@@ -121,7 +179,7 @@ func buildWithTailwindOutput(dir, tailwindOutputPath string) error {
 			warn("card image not found: %s", cfg.Card)
 		}
 	}
-	for _, css := range cfg.CSS {
+	for _, css := range cssEntries {
 		if !isRemoteAsset(css) {
 			if _, err := os.Stat(filepath.Join(dir, css)); err != nil {
 				warn("CSS file not found: %s", css)
@@ -157,7 +215,7 @@ func buildWithTailwindOutput(dir, tailwindOutputPath string) error {
 	// Inline CSS: read file contents into <style> tags instead of <link>
 	stepStarted = time.Now()
 	if cfg.InlineCSS {
-		for _, css := range cfg.CSS {
+		for _, css := range cssEntries {
 			if isRemoteAsset(css) {
 				continue
 			}
@@ -174,7 +232,7 @@ func buildWithTailwindOutput(dir, tailwindOutputPath string) error {
 	// Build <link> refs: exclude local files when inlining
 	stepStarted = time.Now()
 	var cssRefs []string
-	for _, css := range cfg.CSS {
+	for _, css := range cssEntries {
 		if cfg.InlineCSS && !isRemoteAsset(css) {
 			continue
 		}

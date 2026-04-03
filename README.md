@@ -56,6 +56,14 @@ If you have the [Tailwind CLI](https://tailwindcss.com/docs/installation/tailwin
 
 This is independent from `css:`. Entries in `css:` are treated as normal stylesheets (linked by default, inlined only when `inline_css: true`).
 
+You can include local CSS globs in `css:` as well:
+
+```yaml
+css:
+  - /css/*
+  - /components/*.css
+```
+
 ### `<convert>` snippets
 
 Convert markdown or CSV files to HTML with the `<convert>` tag:

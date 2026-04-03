@@ -18,6 +18,7 @@ import (
 	"github.com/yuin/goldmark"
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/extension"
+	gmhtml "github.com/yuin/goldmark/renderer/html"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
@@ -266,6 +267,8 @@ func processContent(content string, dir string) string {
 				chromahtml.PreventSurroundingPre(false),
 			),
 		),
+	), goldmark.WithRendererOptions(
+		gmhtml.WithUnsafe(),
 	))
 
 	// Expand <convert src="..."> tags: .md → HTML, .csv → table
